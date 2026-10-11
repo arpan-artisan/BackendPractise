@@ -45,9 +45,7 @@ def create_reading(reading: SensorModel):
     if reading.unit == 'F':
         reading.temperature = (reading.temperature - 32) * 5/9
 
-        if(reading.temperature>104):
-            state = "alert"
-    if(reading.temperature>40 and reading.unit=="C"):
+    if(reading.temperature>40):
         state = "alert"
 
     return {
