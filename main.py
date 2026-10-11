@@ -1,8 +1,14 @@
 from fastapi import FastAPI, HTTPException
 import time
 import asyncio
+import pydantic
 
 app = FastAPI()
+
+class SensorModel(pydantic.BaseModel):
+    sensor_id: int
+    temperature: float
+    unit: str = "C"
 
 @app.get("/hello")
 def say_hello():
@@ -20,7 +26,7 @@ async def non_blocking():
 
 @app.get("/sensor/{sensor_id}")
 def sensor_reading(sensor_id: int, unit: str="C"):
-    temp = 35
+    temp = 40
     if(unit not in ['C', 'F']):
         raise HTTPException(status_code=400, detail="The parameter must be either 'C' or 'F'.")
     if unit == 'F':
@@ -29,4 +35,21 @@ def sensor_reading(sensor_id: int, unit: str="C"):
         "sensor_id": sensor_id,
         "temperature": temp,
         "unit": unit
+    }
+
+@app.post("/readings")
+def create_reading(reading: SensorModel):
+    if(reading.unit not in ['C', 'F']):
+        raise HTTPException(status_code=400, detail="The parameter must be either 'C' or 'F'.")
+    state = "normal"
+    if reading.unit == 'F':
+        reading.temperature = (reading.temperature - 32) * 5/9
+
+        if(reading.temperature>104):
+            state = "alert"
+    if(reading.temperature>40 and reading.unit=="C"):
+        state = "alert"
+
+    return {
+        "state": state
     }
