@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import time
 import asyncio
 
@@ -17,3 +17,12 @@ async def blocking():
 async def non_blocking():
     await asyncio.sleep(5)  # Simulate a non-blocking operation
     return {"message": "This is a non-blocking operation."}
+
+@app.get("/sensor/{sensor_id}")
+def sensor_reading(sensor_id: int, unit: str="C"):
+    temp = 35
+    if(unit not in ['C', 'F']):
+        raise HTTPException(status_code=400, detail="The parameter must be either 'C' or 'F'.")
+    if unit == 'F':
+        temp = (temp * 9/5) + 32
+    return {"message": f"Sensor {sensor_id} reading is {temp} {unit}."}
