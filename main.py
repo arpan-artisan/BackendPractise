@@ -25,4 +25,8 @@ def sensor_reading(sensor_id: int, unit: str="C"):
         raise HTTPException(status_code=400, detail="The parameter must be either 'C' or 'F'.")
     if unit == 'F':
         temp = (temp * 9/5) + 32
-    return {"message": f"Sensor {sensor_id} reading is {temp} {unit}."}
+    return {
+        "sensor_id": sensor_id,
+        "temperature": temp,
+        "unit": unit
+    }
