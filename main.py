@@ -2,8 +2,22 @@ from fastapi import FastAPI, HTTPException
 import time
 import asyncio
 import pydantic
+import sqlite3
 
 app = FastAPI()
+
+# Initialize the database
+connection = sqlite3.connect('practice.db')
+cursor = connection.cursor()
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS readings (
+    id INTEGER PRIMARY KEY,
+    sensor_id INTEGER NOT NULL,
+    temperature REAL NOT NULL,
+    unit TEXT NOT NULL
+)
+""")
+connection.commit()
 
 class SensorModel(pydantic.BaseModel):
     sensor_id: int
