@@ -26,8 +26,7 @@ async def insert_reading(sensor_id, temperature, unit):
             INSERT INTO readings (sensor_id, temperature, unit) VALUES (?, ?, ?)
             ''', (sensor_id, temperature, unit))
         await connection.commit()
-        await connection.close()
-
+        return cursor.lastrowid
 
 class SensorModel(pydantic.BaseModel):
     sensor_id: int
@@ -62,18 +61,20 @@ def sensor_reading(sensor_id: int, unit: str="C"):
     }
 
 @app.post("/readings")
-def create_reading(reading: SensorModel):
+async def create_reading(reading: SensorModel):
     if(reading.unit not in ['C', 'F']):
         raise HTTPException(status_code=400, detail="The parameter must be either 'C' or 'F'.")
     state = "normal"
     if reading.unit == 'F':
         reading.temperature = (reading.temperature - 32) * 5/9
+        reading.unit = 'C'
 
     if(reading.temperature>40):
         state = "alert"
 
-    insert_reading(reading.sensor_id, reading.temperature, reading.unit)
+    reading = await insert_reading(reading.sensor_id, reading.temperature, reading.unit)
 
     return {
-        "state": state
+        "state": state,
+        "reading_id": reading
     }
