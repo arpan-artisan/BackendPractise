@@ -81,21 +81,21 @@ async def create_reading(reading: SensorModel):
 
 @app.get("/readings/{sensor_id}")
 async def get_all_sensor_readings(sensor_id: int):
-    async with aiosqlite.connect('practice.db') as connection:
-        cursor = await connection.execute('''
-                    SELECT * FROM readings WHERE sensor_id = ?
-                    ''', (sensor_id,))
+    async with aiosqlite.connect("practice.db") as connection:
+        connection.row_factory = aiosqlite.Row
+
+        cursor = await connection.execute(
+            """
+            SELECT id, sensor_id, temperature, unit
+            FROM readings
+            WHERE sensor_id = ?
+            ORDER BY id DESC
+            """,
+            (sensor_id,)
+        )
+
         rows = await cursor.fetchall()
-        readings = []
-        for row in rows:
-            readings.append({
-                "id": row[0],
-                "sensor_id": row[1],
-                "temperature": row[2],
-                "unit": row[3]
-                    })
-       
-        return readings
+        return [dict(row) for row in rows]
 
 @app.get("/readings/{sensor_id}/latest")
 async def get_latest_sensor_reading(sensor_id: int):
