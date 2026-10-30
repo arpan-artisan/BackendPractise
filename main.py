@@ -78,3 +78,40 @@ async def create_reading(reading: SensorModel):
         "state": state,
         "reading_id": reading_id
     }
+
+@app.get("/readings/{sensor_id}")
+async def get_all_sensor_readings(sensor_id: int):
+    async with aiosqlite.connect('practice.db') as connection:
+        cursor = await connection.execute('''
+                    SELECT * FROM readings WHERE sensor_id = ?
+                    ''', (sensor_id,))
+        rows = await cursor.fetchall()
+        readings = []
+        for row in rows:
+            readings.append({
+                "id": row[0],
+                "sensor_id": row[1],
+                "temperature": row[2],
+                "unit": row[3]
+                    })
+       
+        return readings
+
+@app.get("/readings/{sensor_id}/latest")
+async def get_latest_sensor_reading(sensor_id: int):
+    async with aiosqlite.connect("practice.db") as connection:
+        cursor = await connection.execute('''
+        SELECT * FROM readings WHERE sensor_id = ? order by id DESC LIMIT 1
+        ''',(sensor_id,))
+        row = await cursor.fetchone()
+        if(row is None):
+            raise HTTPException(
+                status_code=404,
+                detail="No readings found for this sensor"
+            )
+        return {
+            "id" : row[0],
+            "sensor_id" : row[1],
+            "temperature" : row[2],
+            "unit" : row[3]
+        }
