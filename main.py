@@ -3,21 +3,31 @@ import time
 import asyncio
 import pydantic
 import sqlite3
+import aiosqlite
 
 app = FastAPI()
 
 # Initialize the database
-connection = sqlite3.connect('practice.db')
-cursor = connection.cursor()
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS readings (
-    id INTEGER PRIMARY KEY,
-    sensor_id INTEGER NOT NULL,
-    temperature REAL NOT NULL,
-    unit TEXT NOT NULL
-)
-""")
-connection.commit()
+# connection = sqlite3.connect('practice.db')
+# cursor = connection.cursor()
+# cursor.execute("""
+# CREATE TABLE IF NOT EXISTS readings (
+#     id INTEGER PRIMARY KEY,
+#     sensor_id INTEGER NOT NULL,
+#     temperature REAL NOT NULL,
+#     unit TEXT NOT NULL
+# )
+# """)
+# connection.commit()
+
+async def insert_reading(sensor_id, temperature, unit):
+    async with aiosqlite.connect('practice.db') as connection:
+        cursor = await connection.execute('''
+            INSERT INTO readings (sensor_id, temperature, unit) VALUES (?, ?, ?)
+            ''', (sensor_id, temperature, unit))
+        await connection.commit()
+        await connection.close()
+
 
 class SensorModel(pydantic.BaseModel):
     sensor_id: int
@@ -61,6 +71,8 @@ def create_reading(reading: SensorModel):
 
     if(reading.temperature>40):
         state = "alert"
+
+    insert_reading(reading.sensor_id, reading.temperature, reading.unit)
 
     return {
         "state": state
