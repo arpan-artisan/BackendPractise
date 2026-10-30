@@ -72,9 +72,9 @@ async def create_reading(reading: SensorModel):
     if(reading.temperature>40):
         state = "alert"
 
-    reading = await insert_reading(reading.sensor_id, reading.temperature, reading.unit)
+    reading_id = await insert_reading(reading.sensor_id, reading.temperature, reading.unit)
 
     return {
         "state": state,
-        "reading_id": reading
+        "reading_id": reading_id
     }
